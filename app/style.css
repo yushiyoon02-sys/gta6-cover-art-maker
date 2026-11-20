@@ -1,12 +1,181 @@
-html, body { margin: 0; height: 100%; background: #f2f0f4; color: #1d1b22; font: 15px/1.4 system-ui, sans-serif; }
-.app { display: flex; gap: 32px; align-items: center; justify-content: center; height: 100%; padding: 24px; box-sizing: border-box; }
-.controls { display: flex; flex-direction: column; gap: 14px; width: 280px; }
-.controls h1 { margin: 0; font-size: 28px; }
-.controls p { margin: 0; color: #5c5866; }
-label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
-input[type=text] { font: inherit; padding: 8px; border: 1px solid #c9c4d1; border-radius: 6px; }
-button { font: inherit; font-weight: 700; padding: 10px; border: 0; border-radius: 6px; background: #1d1b22; color: #fff; cursor: pointer; }
-canvas { width: min(70vh, 60vw); height: min(70vh, 60vw); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); }
-body.shot-cover .controls { display: none; }
+/* Neon Sunset Cover Studio — editor styling.
+   A dark studio bench with neon accents; the poster itself is the canvas.
+   The two display faces ship with the app under fonts/ (SIL Open Font
+   License) and load from local files, so the studio works fully offline. */
+
+@font-face {
+  font-family: 'Anton';
+  src: url('./fonts/Anton-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Pacifico';
+  src: url('./fonts/Pacifico-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: #14101f;
+  color: #f3eefc;
+  font: 15px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.masthead {
+  padding: 20px 28px 4px;
+}
+.masthead h1 {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: 34px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #ffe259, #ffa751 45%, #ff4e8a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.masthead h1 span { color: #7df9ff; -webkit-text-fill-color: #7df9ff; }
+.masthead p { margin: 6px 0 0; color: #b9aed6; max-width: 72ch; }
+
+.app {
+  flex: 1;
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  padding: 18px 28px 8px;
+}
+
+.controls {
+  width: 320px;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.controls section {
+  background: #1e1832;
+  border: 1px solid #322a52;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.controls h2 {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffb3d9;
+}
+.controls label { display: flex; flex-direction: column; gap: 5px; font-weight: 600; font-size: 13px; color: #d9d0f2; }
+.hint { margin: 0; color: #9a8fc0; font-size: 13px; }
+
+input[type='text'], select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid #453a6e;
+  border-radius: 8px;
+  background: #150f26;
+  color: #f3eefc;
+}
+input[type='range'] { width: 100%; accent-color: #ff4e8a; }
+
+.file-pick {
+  display: block;
+  text-align: center;
+  padding: 12px;
+  border: 2px dashed #ff4e8a;
+  border-radius: 10px;
+  color: #ffd7ec;
+  cursor: pointer;
+  font-weight: 700;
+}
+.file-pick:hover { background: rgba(255, 78, 138, 0.12); }
+.file-pick input { display: none; }
+
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 8px 12px;
+  border: 1px solid #453a6e;
+  border-radius: 8px;
+  background: #2a2148;
+  color: #efe9ff;
+  cursor: pointer;
+}
+button:hover { border-color: #ff4e8a; }
+button.active {
+  background: linear-gradient(90deg, #ff9a3d, #ff4e8a);
+  border-color: transparent;
+  color: #1a0b2e;
+}
+button.export {
+  font-family: 'Anton', sans-serif;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 14px;
+  border: 0;
+  background: linear-gradient(90deg, #ffe259, #ffa751 45%, #ff4e8a);
+  color: #1a0b2e;
+}
+#status { margin: 0; min-height: 1.4em; color: #8ef2c8; font-size: 13px; }
+
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.thumb {
+  padding: 0;
+  width: 64px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+canvas#cover {
+  width: min(100%, calc((100vh - 240px) * 1.6));
+  max-height: calc(100vh - 240px);
+  object-fit: contain;
+  background: #f5f1e8;
+  border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px #322a52;
+  cursor: grab;
+  touch-action: none;
+}
+canvas#cover:active { cursor: grabbing; }
+canvas#cover.dropping { outline: 3px dashed #7df9ff; outline-offset: -10px; }
+.stage-hint { margin: 0; color: #9a8fc0; font-size: 13px; text-align: center; }
+
+footer { padding: 10px 28px 20px; color: #7d72a6; font-size: 13px; }
+footer p { margin: 0; max-width: 110ch; }
+
+/* Screenshot scene: the finished poster alone, edge to edge. */
+body.shot-cover .masthead,
+body.shot-cover .controls,
+body.shot-cover footer,
+body.shot-cover .stage-hint { display: none; }
 body.shot-cover .app { padding: 0; }
-body.shot-cover canvas { width: 100vw; height: 100vh; box-shadow: none; }
+body.shot-cover .stage { gap: 0; }
+body.shot-cover canvas#cover {
+  width: 100vw;
+  height: 100vh;
+  max-height: none;
+  border-radius: 0;
+  box-shadow: none;
+  object-fit: fill;
+}

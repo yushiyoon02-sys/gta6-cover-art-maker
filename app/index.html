@@ -3,21 +3,101 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cover Snap</title>
+<title>Neon Sunset Cover Studio</title>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
+<header class="masthead">
+  <h1>Neon Sunset <span>Cover Studio</span></h1>
+  <p>Your photos, cut into a multi-panel poster with bold lettering and a sunset grade. Everything happens on your machine — photos are never uploaded.</p>
+</header>
+
 <main class="app">
-  <section class="controls">
-    <h1>Cover Snap</h1>
-    <p>A photo and a caption, made into a square cover.</p>
-    <label>Photo <input id="photo" type="file" accept="image/*"></label>
-    <label>Caption <input id="caption" type="text" maxlength="40" value="Sunset Heist"></label>
-    <button id="export" type="button">Export PNG 1080 x 1080</button>
+  <aside class="controls">
+    <section>
+      <h2>1 · Photos</h2>
+      <label class="file-pick">Add your photos
+        <input id="photos" type="file" accept="image/*" multiple>
+      </label>
+      <p class="hint">Or try a sample:</p>
+      <div class="row">
+        <button type="button" data-sample="boulevard">Boulevard</button>
+        <button type="button" data-sample="beach">Beach</button>
+        <button type="button" data-sample="car">Coastal car</button>
+      </div>
+      <div id="thumbs" class="thumbs" aria-label="Loaded photos"></div>
+      <div class="row">
+        <button type="button" id="fill-all">Same photo everywhere</button>
+        <button type="button" id="spread">Spread photos</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>2 · Layout &amp; size</h2>
+      <div class="row">
+        <button type="button" data-layout="grid">2 × 2 grid</button>
+        <button type="button" data-layout="hero">Hero + two</button>
+        <button type="button" data-layout="strips">Three strips</button>
+        <button type="button" data-layout="single">Full bleed</button>
+      </div>
+      <div class="row">
+        <button type="button" data-size="square">1080 × 1080</button>
+        <button type="button" data-size="portrait">1080 × 1350</button>
+        <button type="button" data-size="landscape">1920 × 1080</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>3 · Colour grade</h2>
+      <div class="row">
+        <button type="button" data-grade="sunset">Vice sunset</button>
+        <button type="button" data-grade="neon">Neon night</button>
+        <button type="button" data-grade="clean">Clean</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>4 · Panel</h2>
+      <p class="hint">Click a panel on the poster to select it, drag to move the photo, scroll to zoom.</p>
+      <label>Zoom <input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+      <button type="button" id="reset-panel">Reset panel framing</button>
+    </section>
+
+    <section>
+      <h2>5 · Caption</h2>
+      <label>Title <input id="title" type="text" maxlength="48" value="Sunset Heist"></label>
+      <label>Script subtitle <input id="subtitle" type="text" maxlength="48" value="welcome to the coast"></label>
+      <label>Position
+        <select id="caption-pos">
+          <option value="bottom" selected>Bottom</option>
+          <option value="top">Top</option>
+          <option value="center">Center</option>
+        </select>
+      </label>
+      <label>Lettering
+        <select id="caption-style">
+          <option value="sunset" selected>Sunset gradient</option>
+          <option value="neon">Neon gradient</option>
+          <option value="white">Clean white</option>
+        </select>
+      </label>
+      <label>Title size <input id="caption-size" type="range" min="0.5" max="1.6" step="0.05" value="1"></label>
+    </section>
+
+    <button id="export" type="button" class="export">Export PNG</button>
     <p id="status" role="status"></p>
+  </aside>
+
+  <section class="stage">
+    <canvas id="cover" width="1080" height="1080" tabindex="0" aria-label="Cover preview. Click a panel to select it, drag to pan, scroll to zoom."></canvas>
+    <p class="stage-hint">Drop photos onto the poster, or use the panel on the left. Arrow keys nudge the selected photo.</p>
   </section>
-  <canvas id="cover" width="1080" height="1080" aria-label="The cover"></canvas>
 </main>
+
+<footer>
+  <p>Neon Sunset Cover Studio — an original cover-art maker. Fonts: Anton &amp; Pacifico (SIL Open Font License), shipped with the app. Sample photos were made with an image model for this app.</p>
+</footer>
+
 <script type="module" src="./src/main.js"></script>
 </body>
 </html>
