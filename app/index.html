@@ -25,6 +25,9 @@
         <button type="button" data-sample="beach">Beach</button>
         <button type="button" data-sample="car">Coastal car</button>
         <button type="button" data-sample="motel">Motel dusk</button>
+        <button type="button" data-sample="driver">Driver</button>
+        <button type="button" data-sample="highway">Highway run</button>
+        <button type="button" data-sample="citynight">City night</button>
       </div>
       <div id="thumbs" class="thumbs" aria-label="Loaded photos"></div>
       <div class="row">
@@ -54,6 +57,7 @@
         <button type="button" data-grade="sunset">Vice sunset</button>
         <button type="button" data-grade="neon">Neon night</button>
         <button type="button" data-grade="clean">Clean</button>
+        <button type="button" data-grade="dusk">Muted dusk</button>
       </div>
     </section>
 
@@ -61,6 +65,15 @@
       <h2>4 · Panel</h2>
       <p class="hint">Click a panel on the poster to select it, drag to move the photo, scroll to zoom.</p>
       <label>Zoom <input id="zoom" type="range" min="1" max="3" step="0.01" value="1"></label>
+      <label>Panel grade
+        <select id="panel-grade">
+          <option value="" selected>Same as poster</option>
+          <option value="sunset">Vice sunset</option>
+          <option value="neon">Neon night</option>
+          <option value="clean">Clean</option>
+          <option value="dusk">Muted dusk</option>
+        </select>
+      </label>
       <button type="button" id="reset-panel">Reset panel framing</button>
     </section>
 
@@ -73,6 +86,12 @@
           <option value="bottom" selected>Bottom</option>
           <option value="top">Top</option>
           <option value="center">Center</option>
+        </select>
+      </label>
+      <label>Caption layout
+        <select id="caption-mode">
+          <option value="overlay" selected>Over the photo</option>
+          <option value="band">Dark band</option>
         </select>
       </label>
       <label>Lettering

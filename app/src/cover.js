@@ -2,12 +2,14 @@
 //
 // Everything the poster is made of is drawn here onto a 2D canvas at the
 // export's own pixel size: the multi-panel layout with its white gutters,
-// each photo cover-fitted into its panel (zoom + pan), the colour grade
-// (a canvas filter per photo plus a gradient wash and vignette over the
-// whole poster), and the caption — a big display title with an outline,
-// a drop shadow and a sunset-gradient fill, with a script subtitle
-// glowing above it. The editor preview and the exported PNG come from
-// this one function, so what you see is exactly what you save.
+// each photo cover-fitted into its panel (zoom + pan, and an optional
+// per-panel colour grade), the poster's colour grade (a canvas filter per
+// photo plus a gradient wash and vignette over the whole poster), and the
+// caption — either a big display title with an outline, a drop shadow and
+// a sunset-gradient fill under a glowing script subtitle, or the same
+// title set on a solid dark band with plain small capitals. The editor
+// preview and the exported PNG come from this one function, so what you
+// see is exactly what you save.
 
 /** The three post sizes the studio exports, in pixels. */
 export const SIZES = {
@@ -79,6 +81,15 @@ export const GRADES = {
     filter: 'saturate(1.12) contrast(1.06) brightness(1.01)',
     wash: null,
     vignette: 0.18,
+  },
+  dusk: {
+    label: 'Muted dusk',
+    filter: 'saturate(0.8) contrast(1.08) brightness(0.94)',
+    wash: [
+      [0, 'rgba(40, 60, 110, 0.10)'],
+      [1, 'rgba(10, 16, 40, 0.22)'],
+    ],
+    vignette: 0.3,
   },
 };
 
@@ -274,6 +285,36 @@ function drawSubtitleBackdrop(ctx, cx, baselineY, textW, subSize) {
 }
 
 /**
+ * Fits the big title into `maxWidth`: wraps onto at most two lines at the
+ * split that keeps the widest line narrowest, then shrinks the Anton size
+ * until every line fits. Returns the lines and the fitted size. Shared by
+ * the overlay caption and the dark-band caption so both re-typeset the
+ * same way on every canvas size.
+ */
+function fitTitle(ctx, title, maxWidth, baseSize) {
+  let size = baseSize;
+  const setFont = (s) => { ctx.font = `${s}px Anton, sans-serif`; };
+  setFont(size);
+  let lines = [title];
+  if (ctx.measureText(title).width > maxWidth) {
+    const words = title.split(/\s+/);
+    let best = null;
+    for (let i = 1; i < words.length; i++) {
+      const a = words.slice(0, i).join(' ');
+      const b = words.slice(i).join(' ');
+      const widest = Math.max(ctx.measureText(a).width, ctx.measureText(b).width);
+      if (!best || widest < best.widest) best = { lines: [a, b], widest };
+    }
+    if (best && best.widest < ctx.measureText(title).width) lines = best.lines;
+    while (size > 20 && Math.max(...lines.map((l) => ctx.measureText(l).width)) > maxWidth) {
+      size -= 4;
+      setFont(size);
+    }
+  }
+  return { lines, size };
+}
+
+/**
  * Draws the caption: the script subtitle glowing over the big display
  * title. Both are typeset into their layout zone (see captionZones) and
  * fitted to the canvas at hand, so every export size re-typesets from
@@ -289,29 +330,14 @@ function drawCaption(ctx, w, h, state) {
   drawCaptionShade(ctx, w, h, state.captionPos, zones.shade.x0, zones.shade.x1);
 
   const scale = state.captionSize ?? 1;
-  let size = Math.min(w, h) * 0.16 * scale;
+  const baseSize = Math.min(w, h) * 0.16 * scale;
   const maxWidth = zones.title.maxW;
   const setTitleFont = (s) => { ctx.font = `${s}px Anton, sans-serif`; };
 
-  // Wrap the title onto at most two lines, shrinking until it fits.
   let lines = [title];
+  let size = baseSize;
   if (title) {
-    setTitleFont(size);
-    if (ctx.measureText(title).width > maxWidth) {
-      const words = title.split(/\s+/);
-      let best = null;
-      for (let i = 1; i < words.length; i++) {
-        const a = words.slice(0, i).join(' ');
-        const b = words.slice(i).join(' ');
-        const widest = Math.max(ctx.measureText(a).width, ctx.measureText(b).width);
-        if (!best || widest < best.widest) best = { lines: [a, b], widest };
-      }
-      if (best && best.widest < ctx.measureText(title).width) lines = best.lines;
-      while (size > 20 && Math.max(...lines.map((l) => ctx.measureText(l).width)) > maxWidth) {
-        size -= 4;
-        setTitleFont(size);
-      }
-    }
+    ({ lines, size } = fitTitle(ctx, title, maxWidth, baseSize));
   }
 
   const lineHeight = size * 1.04;
@@ -371,10 +397,93 @@ function drawCaption(ctx, w, h, state) {
 }
 
 /**
+ * The dark-band caption: the title (at most two lines) sits on a solid
+ * dark band across the poster's foot (or head, per captionPos), with the
+ * subtitle as small plain capitals inside the band — no script lettering
+ * over the photos. The band is a near-opaque vertical gradient with a
+ * thin sunset accent rule on its inner edge, so the lettering stays
+ * readable however small the poster is shown.
+ */
+function drawCaptionBand(ctx, w, h, state) {
+  const title = (state.title ?? '').trim().toUpperCase();
+  const subtitle = (state.subtitle ?? '').trim().toUpperCase();
+  if (!title && !subtitle) return;
+
+  const scale = state.captionSize ?? 1;
+  const maxWidth = w * 0.9;
+  let lines = [];
+  let size = Math.min(w, h) * 0.13 * scale;
+  if (title) ({ lines, size } = fitTitle(ctx, title, maxWidth, size));
+  const lineHeight = size * 1.06;
+  const subSize = Math.max(16, size * 0.3);
+  const padY = size * 0.42;
+  const bandH = padY * 2 + lines.length * lineHeight + (subtitle ? subSize * 1.5 : 0);
+  const atTop = state.captionPos === 'top';
+  const bandY = atTop ? 0 : h - bandH;
+
+  // The band itself: dark gradient, denser at the outer edge.
+  const band = ctx.createLinearGradient(0, bandY, 0, bandY + bandH);
+  if (atTop) {
+    band.addColorStop(0, 'rgba(9, 4, 20, 0.96)');
+    band.addColorStop(1, 'rgba(9, 4, 20, 0.86)');
+  } else {
+    band.addColorStop(0, 'rgba(9, 4, 20, 0.86)');
+    band.addColorStop(1, 'rgba(9, 4, 20, 0.96)');
+  }
+  ctx.fillStyle = band;
+  ctx.fillRect(0, bandY, w, bandH);
+
+  // A thin sunset rule on the band's inner edge.
+  const ruleY = atTop ? bandY + bandH : bandY;
+  const rule = ctx.createLinearGradient(0, 0, w, 0);
+  rule.addColorStop(0, '#ff4e8a');
+  rule.addColorStop(0.5, '#ffa751');
+  rule.addColorStop(1, '#ffe259');
+  ctx.fillStyle = rule;
+  ctx.fillRect(0, atTop ? ruleY - Math.max(3, h * 0.004) : ruleY, w, Math.max(3, h * 0.004));
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  let y = bandY + padY;
+
+  if (title) {
+    ctx.font = `${size}px Anton, sans-serif`;
+    const style = CAPTION_STYLES[state.captionStyle] ?? CAPTION_STYLES.sunset;
+    for (const line of lines) {
+      y += lineHeight;
+      const grad = ctx.createLinearGradient(0, y - size, 0, y);
+      style.stops.forEach((colour, i) => grad.addColorStop(style.stops.length === 1 ? 0 : i / (style.stops.length - 1), colour));
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = size * 0.12;
+      ctx.shadowOffsetY = size * 0.05;
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#12061f';
+      ctx.lineWidth = Math.max(2, size * 0.07);
+      ctx.strokeText(line, w / 2, y);
+      ctx.fillStyle = grad;
+      ctx.fillText(line, w / 2, y);
+      ctx.restore();
+    }
+  }
+
+  if (subtitle) {
+    y += subSize * 1.5;
+    ctx.save();
+    ctx.font = `${subSize}px Anton, sans-serif`;
+    try { ctx.letterSpacing = `${Math.round(subSize * 0.18)}px`; } catch { /* older canvas */ }
+    ctx.fillStyle = '#f5ead9';
+    ctx.fillText(subtitle, w / 2, y);
+    ctx.restore();
+  }
+}
+
+/**
  * Draws the whole cover onto `canvas` at the canvas's own size.
  * `state`: { photos, panels, layout, grade, title, subtitle, captionPos,
- * captionSize, captionStyle, selected }. With `forExport` the selection
- * outline is left off.
+ * captionSize, captionStyle, captionMode, selected }. A panel may carry
+ * its own `grade` key to override the poster's grade for that photo.
+ * With `forExport` the selection outline is left off.
  */
 export function drawCover(canvas, state, forExport = false) {
   const ctx = canvas.getContext('2d');
@@ -390,14 +499,18 @@ export function drawCover(canvas, state, forExport = false) {
     const rect = panelRect(state.layout, i, w, h);
     const panel = state.panels[i] ?? freshPanel(0);
     const img = state.photos[panel.photo] ?? state.photos[0] ?? null;
+    // A panel may override the poster's grade (e.g. one muted panel
+    // among saturated ones); the wash still comes from the poster grade.
+    const panelGrade = GRADES[panel.grade] ?? grade;
     // In the hero layout the big panel is the poster's focal point: it
     // runs a touch brighter while the side panels step back under a veil.
     const tone = heroLayout ? (i === 0 ? { boost: ' brightness(1.07)' } : { dim: 0.13 }) : {};
-    drawPanel(ctx, rect, img, panel, grade, tone);
+    drawPanel(ctx, rect, img, panel, panelGrade, tone);
   }
 
   drawGradeWash(ctx, w, h, grade);
-  drawCaption(ctx, w, h, state);
+  if (state.captionMode === 'band') drawCaptionBand(ctx, w, h, state);
+  else drawCaption(ctx, w, h, state);
 
   if (!forExport && state.selected >= 0 && state.selected < count) {
     const rect = panelRect(state.layout, state.selected, w, h);

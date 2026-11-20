@@ -18,8 +18,10 @@ const zoomSlider = document.getElementById('zoom');
 const titleInput = document.getElementById('title');
 const subtitleInput = document.getElementById('subtitle');
 const captionPosSelect = document.getElementById('caption-pos');
+const captionModeSelect = document.getElementById('caption-mode');
 const captionSizeSlider = document.getElementById('caption-size');
 const captionStyleSelect = document.getElementById('caption-style');
+const panelGradeSelect = document.getElementById('panel-grade');
 
 const state = {
   photos: [],          // HTMLImageElement[], in load order
@@ -31,6 +33,7 @@ const state = {
   title: 'Sunset Heist',
   subtitle: 'welcome to the coast',
   captionPos: 'bottom',
+  captionMode: 'overlay',
   captionSize: 1,
   captionStyle: 'sunset',
   selected: 0,
@@ -66,7 +69,10 @@ function redraw() {
   canvas.style.aspectRatio = `${size.w} / ${size.h}`;
   drawCover(canvas, state);
   const panel = state.panels[state.selected];
-  if (panel) zoomSlider.value = String(panel.zoom);
+  if (panel) {
+    zoomSlider.value = String(panel.zoom);
+    panelGradeSelect.value = panel.grade ?? '';
+  }
   markActiveButtons();
 }
 
@@ -235,6 +241,12 @@ document.getElementById('reset-panel').addEventListener('click', () => {
   redraw();
 });
 
+panelGradeSelect.addEventListener('change', () => {
+  const panel = state.panels[state.selected];
+  if (panel) panel.grade = panelGradeSelect.value || undefined;
+  redraw();
+});
+
 canvas.addEventListener('keydown', (event) => {
   const panel = state.panels[state.selected];
   if (!panel) return;
@@ -256,6 +268,7 @@ canvas.addEventListener('keydown', (event) => {
 titleInput.addEventListener('input', () => { state.title = titleInput.value; redraw(); });
 subtitleInput.addEventListener('input', () => { state.subtitle = subtitleInput.value; redraw(); });
 captionPosSelect.addEventListener('change', () => { state.captionPos = captionPosSelect.value; redraw(); });
+captionModeSelect.addEventListener('change', () => { state.captionMode = captionModeSelect.value; redraw(); });
 captionSizeSlider.addEventListener('input', () => { state.captionSize = Number(captionSizeSlider.value); redraw(); });
 captionStyleSelect.addEventListener('change', () => { state.captionStyle = captionStyleSelect.value; redraw(); });
 
@@ -293,7 +306,7 @@ canvas.addEventListener('drop', async (event) => {
 // --- Start ---------------------------------------------------------------
 const query = new URLSearchParams(location.search);
 if (query.get('shot')) {
-  runShot(query, { state, redraw, loadSample, refreshThumbs, controls: { titleInput, subtitleInput, captionPosSelect, captionSizeSlider, captionStyleSelect } });
+  runShot(query, { state, redraw, loadSample, refreshThumbs, controls: { titleInput, subtitleInput, captionPosSelect, captionModeSelect, captionSizeSlider, captionStyleSelect, panelGradeSelect } });
 } else {
   redraw();
 }
