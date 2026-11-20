@@ -10,7 +10,7 @@ sunset or neon colour wash — and exports it as a PNG ready to post.
 
 - **Any photo, several panels.** Add photos from your own machine (they
   are read locally with FileReader and never uploaded), or start from the
-  three built-in samples. One photo can fill every panel, or each panel
+  four built-in samples. One photo can fill every panel, or each panel
   can carry its own.
 - **Four poster layouts.** 2 × 2 grid, hero + two, three vertical strips,
   and full bleed, all with the thin white gutters of a game box.
@@ -51,7 +51,7 @@ writes `dossier.json` with the kit's `buildDossier`.
 
 - Original throughout: no Rockstar Games logo, wordmark, artwork,
   characters or fonts anywhere in the app or its output.
-- The three sample photos in `app/samples/` were made with an image
+- The four sample photos in `app/samples/` were made with an image
   model for this app and are free to use.
 - Everything the page loads is a file under `app/`; it works fully
   offline in desktop Chrome.

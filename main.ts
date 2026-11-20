@@ -1,7 +1,7 @@
 // Neon Sunset Cover Studio — the hand-in program for gta6-cover-art-01 (Node 22, standard library only).
 //
 // The entry is the app/ folder beside this file: a static, offline web app (app/index.html plus its ES modules,
-// two OFL display fonts under app/fonts/, and three sample photos under app/samples/) that turns a person's own
+// two OFL display fonts under app/fonts/, and four sample photos under app/samples/) that turns a person's own
 // photos and a caption into multi-panel, sunset-graded cover art and exports it as a PNG at 1080 x 1080,
 // 1080 x 1350 or 1920 x 1080. This program copies app/ and screenshots/ into /output and writes
 // /output/dossier.json with the kit's buildDossier, exactly as the starter's plumbing did.
